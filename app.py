@@ -2,7 +2,7 @@
 Main Streamlit BI Dashboard Application (`app.py`)
 Investigates the relationship between Views on Science (`SCI`, `SKSI`, `ATS`) and
 Views on Evolution (`EVO`, split into Fact `FCT` and Credibility `CRD`) across N = 121
-respondents, moderated by Age, Gender, and Religiosity (Religion strictly excluded).
+respondents, moderated by Age, Gender, Religiosity, and School Type (Religion strictly excluded).
 Styled in the Ocean Beach Palette (https://pikka.app/palettes/ocean-beach-palette).
 """
 
@@ -276,6 +276,14 @@ def render_sidebar_controls(
         help="Filter respondents by Religiosity (Religious vs. Non Religious). Religion denomination is excluded by design.",
     )
 
+    all_school_types = sorted(raw_df["School Type"].unique().tolist())
+    selected_school_types = st.sidebar.multiselect(
+        "School Type",
+        options=all_school_types,
+        default=all_school_types,
+        help="PHS = Public, SHS = Science, PSS = Pilot.",
+    )
+
     min_age, max_age = int(raw_df["Age"].min()), int(raw_df["Age"].max())
     selected_age_range: Tuple[int, int] = st.sidebar.slider(
         "Age Range (Years)",
@@ -317,6 +325,7 @@ def render_sidebar_controls(
     return {
         "genders": selected_genders,
         "religiosities": selected_religiosities,
+        "school_types": selected_school_types,
         "age_range": selected_age_range,
         "predictor_code": predictor_code,
         "criterion_code": criterion_code,
@@ -354,6 +363,7 @@ def main() -> None:
         genders=controls["genders"],
         religiosities=controls["religiosities"],
         age_range=controls["age_range"],
+        school_types=controls["school_types"],
     )
     scored_df = get_scored_dataframe(filtered_raw, scoring_mode=controls["scoring_mode"])
     active_n = len(scored_df)
@@ -455,7 +465,7 @@ def main() -> None:
         )
         st.segmented_control(
             "Color Joint Scatterplot By Moderator:",
-            options=["None", "Religiosity", "Gender", "Age"],
+            options=["None", "Religiosity", "Gender", "Age", "School Type"],
             default="None",
             selection_mode="single",
             width="stretch",

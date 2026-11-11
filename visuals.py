@@ -120,6 +120,11 @@ MODERATOR_COLOR_MAPS: Dict[str, Dict[str, str]] = {
         "17": "#f95d6a",
         "18": "#ffa600",
     },
+    "School Type": {
+        "Public": "#003f5c",
+        "Science": "#ff7c43",
+        "Pilot": "#ffa600",
+    },
 }
 
 
@@ -191,7 +196,7 @@ def plot_joint_scatter_with_marginals(
 ) -> Any:
     """
     Joint Scatterplot with Marginal Box/Violin Distributions, OLS regression trendline,
-    95% confidence band, and optional demographic color-coding (Religiosity, Gender, Age).
+    95% confidence band, and optional demographic color-coding.
     """
     fig = make_subplots(
         rows=2,
@@ -207,7 +212,7 @@ def plot_joint_scatter_with_marginals(
     corr_res = compute_bivariate_correlation(df, x_col, y_col, method=corr_method)
     ols_res = fit_ols_regression(df, x_col, y_col)
 
-    if color_by in ("Religiosity", "Gender", "Age"):
+    if color_by in ("Religiosity", "Gender", "Age", "School Type"):
         palette_map = MODERATOR_COLOR_MAPS.get(color_by, {})
         groups = sorted(df[color_by].astype(str).unique())
         for idx, grp_val in enumerate(groups):
@@ -227,9 +232,9 @@ def plot_joint_scatter_with_marginals(
                         opacity=0.85,
                         line=dict(width=1, color="#ffffff"),
                     ),
-                    customdata=np.column_stack([sub["ID"], sub["Gender"], sub["Religiosity"], sub["Age"]]),
+                    customdata=np.column_stack([sub["School Type"], sub["Gender"], sub["Religiosity"], sub["Age"]]),
                     hovertemplate=(
-                        "<b>Respondent ID: %{customdata[0]}</b><br>"
+                        "<b>School Type: %{customdata[0]}</b><br>"
                         f"{x_label}: %{{x:.2f}}<br>"
                         f"{y_label}: %{{y:.2f}}<br>"
                         "Gender: %{customdata[1]} | Religiosity: %{customdata[2]} | Age: %{customdata[3]}"
@@ -275,6 +280,7 @@ def plot_joint_scatter_with_marginals(
             )
     else:
         color = UI_THEME["accent_fct"]
+        y_color = UI_THEME["accent_crd"]
         fig.add_trace(
             go.Scatter(
                 x=df[x_col],
@@ -282,9 +288,9 @@ def plot_joint_scatter_with_marginals(
                 mode="markers",
                 name=f"Respondents (n={len(df)})",
                 marker=dict(color=color, size=9, opacity=0.85, line=dict(width=1, color="#ffffff")),
-                customdata=np.column_stack([df["ID"], df["Gender"], df["Religiosity"], df["Age"]]),
+                customdata=np.column_stack([df["School Type"], df["Gender"], df["Religiosity"], df["Age"]]),
                 hovertemplate=(
-                    "<b>Respondent ID: %{customdata[0]}</b><br>"
+                    "<b>School Type: %{customdata[0]}</b><br>"
                     f"{x_label}: %{{x:.2f}}<br>"
                     f"{y_label}: %{{y:.2f}}<br>"
                     "Gender: %{customdata[1]} | Religiosity: %{customdata[2]} | Age: %{customdata[3]}"
@@ -312,8 +318,8 @@ def plot_joint_scatter_with_marginals(
             go.Violin(
                 y=df[y_col],
                 showlegend=False,
-                line_color=UI_THEME["accent_crd"],
-                fillcolor=UI_THEME["accent_crd"],
+                line_color=y_color,
+                fillcolor=y_color,
                 opacity=0.65,
                 box_visible=True,
                 meanline_visible=True,
@@ -430,9 +436,9 @@ def plot_dual_slope_epistemic_overlay(
                 opacity=0.75,
                 line=dict(width=1, color="#ffffff"),
             ),
-            customdata=df["ID"],
+            customdata=df["School Type"],
             hovertemplate=(
-                "<b>ID: %{customdata}</b> | Construct: Fact (FCT)<br>"
+                "<b>School Type: %{customdata}</b> | Construct: Fact (FCT)<br>"
                 f"{predictor_label} (1-5): %{{x:.2f}}<br>"
                 "FCT Mean (1-5): %{y:.2f}<extra></extra>"
             ),
@@ -452,9 +458,9 @@ def plot_dual_slope_epistemic_overlay(
                 opacity=0.75,
                 line=dict(width=1, color="#ffffff"),
             ),
-            customdata=df["ID"],
+            customdata=df["School Type"],
             hovertemplate=(
-                "<b>ID: %{customdata}</b> | Construct: Credibility (CRD)<br>"
+                "<b>School Type: %{customdata}</b> | Construct: Credibility (CRD)<br>"
                 f"{predictor_label} (1-5): %{{x:.2f}}<br>"
                 "CRD Mean (1-5): %{y:.2f}<extra></extra>"
             ),
@@ -576,7 +582,7 @@ def plot_bivariate_aspect_drilldown(
 ) -> Any:
     """
     Bivariate Aspect Drill-Down Inspector: Side-by-side Jittered Scatterplot with OLS
-    trendline & student ID tooltips (left) and 2D Contingency Density Heatmap (right).
+    trendline & school-type tooltips (left) and 2D Contingency Density Heatmap (right).
     """
     fig = make_subplots(
         rows=1,
@@ -612,14 +618,14 @@ def plot_bivariate_aspect_drilldown(
                 name=f"{grp_val} (n={len(sub)})",
                 marker=dict(color=color, size=9, opacity=0.82, line=dict(width=1, color="#ffffff")),
                 customdata=np.column_stack([
-                    sub["ID"],
+                    sub["School Type"],
                     sub[sci_aspect],
                     sub[evo_aspect],
                     sub["Gender"],
                     sub["Age"],
                 ]),
                 hovertemplate=(
-                    "<b>Student ID: %{customdata[0]}</b><br>"
+                    "<b>School Type: %{customdata[0]}</b><br>"
                     f"{sci_label} (exact): %{{customdata[1]:.2f}}<br>"
                     f"{evo_label} (exact): %{{customdata[2]:.2f}}<br>"
                     f"Religiosity: {grp_val} | Gender: %{{customdata[3]}} | Age: %{{customdata[4]}}"
@@ -988,9 +994,9 @@ def plot_faceted_moderation_regressions(
                 mode="markers",
                 name=f"{moderator}: {lvl} (n={len(sub)})",
                 marker=dict(color=color, size=9, opacity=0.82, line=dict(width=1, color="#ffffff")),
-                customdata=sub["ID"],
+                customdata=sub["School Type"],
                 hovertemplate=(
-                    f"<b>ID: %{{customdata}}</b> ({moderator}: {lvl})<br>"
+                    f"<b>School Type: %{{customdata}}</b> ({moderator}: {lvl})<br>"
                     f"{x_label}: %{{x:.2f}}<br>"
                     f"{y_label}: %{{y:.2f}}<extra></extra>"
                 ),
@@ -1083,19 +1089,43 @@ def plot_subgroup_distributions(
                     name=f"{moderator}: {lvl}",
                     legendgroup=lvl,
                     showlegend=(c_idx == 0),
-                    box_visible=True,
-                    meanline_visible=True,
-                    points="all",
-                    pointpos=-0.25,
-                    jitter=0.25,
+                    box_visible=False,
+                    meanline_visible=False,
+                    points=False,
                     line_color=color,
                     fillcolor=color,
-                    opacity=0.72,
-                    marker=dict(size=6, color=color, opacity=0.85),
-                    customdata=sub["ID"],
+                    opacity=1,
+                    hoverinfo="skip",
+                ),
+                row=1,
+                col=col_num,
+            )
+            fig.add_trace(
+                go.Box(
+                    x=[lvl] * len(sub),
+                    y=sub[c_code],
+                    name=f"{moderator}: {lvl} box and observations",
+                    legendgroup=lvl,
+                    showlegend=False,
+                    boxpoints="all",
+                    jitter=0.24,
+                    pointpos=0,
+                    boxmean=True,
+                    hoveron="points",
+                    opacity=0,
+                    fillcolor="rgba(255, 255, 255, 0)",
+                    line=dict(color="rgba(0, 0, 0, 0)", width=1.8),
+                    marker=dict(
+                        color="rgba(0, 0, 0, 0)",
+                        size=7,
+                        opacity=0,
+                        line=dict(color="rgba(0, 0, 0, 0)", width=1.5),
+                    ),
+                    customdata=sub["School Type"],
                     hovertemplate=(
-                        f"<b>ID: %{{customdata}}</b> ({moderator}: {lvl})<br>"
-                        f"{titles[c_idx]}: %{{y:.2f}}<extra></extra>"
+                        f"<b>School Type: %{{customdata}}</b> ({moderator}: {lvl})<br>"
+                        f"{titles[c_idx]}: %{{y:.2f}}<br>"
+                        "Q1: %{q1:.2f} | Median: %{median:.2f} | Q3: %{q3:.2f}<extra></extra>"
                     ),
                 ),
                 row=1,

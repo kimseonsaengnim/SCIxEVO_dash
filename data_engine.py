@@ -43,6 +43,7 @@ from config import (
     SCIENCE_COGNITIVE_ASPECTS,
     SCIENCE_COGNITIVE_ITEMS,
     SCIENCE_PREDICTORS,
+    SCHOOL_TYPE_LABELS,
     load_tg_codes,
     resolve_input_file,
 )
@@ -133,8 +134,14 @@ def load_survey_data() -> pd.DataFrame:
     for forbidden_col in [c for c in df.columns if "religion" in c.lower() and c != "Religiosity"]:
         df = df.drop(columns=[forbidden_col])
 
-    # Clean string demographic columns
-    df["ID"] = df["ID"].astype(str).str.strip()
+    # The former ID column now contains school-type codes, not respondent IDs.
+    school_type_source = "School Type" if "School Type" in df.columns else "ID"
+    school_type_codes = df.pop(school_type_source).astype(str).str.strip().str.upper()
+    school_type_labels = {
+        **SCHOOL_TYPE_LABELS,
+        **{label.upper(): label for label in SCHOOL_TYPE_LABELS.values()},
+    }
+    df["School Type"] = school_type_codes.map(school_type_labels).fillna("Unknown")
     df["Gender"] = df["Gender"].astype(str).str.strip()
     df["Religiosity"] = df["Religiosity"].astype(str).str.strip()
     df["Age"] = df["Age"].astype(int)
@@ -187,8 +194,9 @@ def filter_cohort(
     genders: List[str] | None = None,
     religiosities: List[str] | None = None,
     age_range: Tuple[int, int] = (14, 18),
+    school_types: List[str] | None = None,
 ) -> pd.DataFrame:
-    """Filter respondent dataframe by active demographic slicers (Gender, Religiosity, Age)."""
+    """Filter respondents by gender, religiosity, age, and school type."""
     out = df.copy()
     if genders is not None:
         out = out[out["Gender"].isin(genders)]
@@ -196,6 +204,8 @@ def filter_cohort(
         out = out[out["Religiosity"].isin(religiosities)]
     if age_range is not None:
         out = out[(out["Age"] >= age_range[0]) & (out["Age"] <= age_range[1])]
+    if school_types is not None:
+        out = out[out["School Type"].isin(school_types)]
     return out.reset_index(drop=True)
 
 
@@ -418,7 +428,7 @@ def fit_moderation_ols(
 ) -> Dict[str, Any]:
     """
     Fit OLS moderation model Y ~ X * Moderator using statsmodels (with exact scipy/numpy fallback).
-    Supports categorical moderators ('Gender', 'Religiosity') and continuous/ordinal ('Age').
+    Supports categorical moderators ('Gender', 'Religiosity', 'School Type') and ordinal ('Age').
     Returns overall model stats, interaction term beta/p-value, and subgroup slope breakdowns.
     """
     if moderator not in ACTIVE_DEMOGRAPHICS:
@@ -437,8 +447,10 @@ def fit_moderation_ols(
     sub["X_val"] = sub[x_col].astype(float)
     sub["Y_val"] = sub[y_col].astype(float)
 
-    if moderator in ("Gender", "Religiosity"):
-        formula = f"Y_val ~ X_val * C({moderator})"
+    categorical_moderator = moderator in ("Gender", "Religiosity", "School Type")
+    if categorical_moderator:
+        category_term = f"C(Q('{moderator}'))" if " " in moderator else f"C({moderator})"
+        formula = f"Y_val ~ X_val * {category_term}"
     else:
         formula = f"Y_val ~ X_val * {moderator}"
 
@@ -460,20 +472,25 @@ def fit_moderation_ols(
     else:
         x_arr = sub["X_val"].to_numpy()
         y_arr = sub["Y_val"].to_numpy()
-        if moderator in ("Gender", "Religiosity"):
-            levels = sorted(sub[moderator].unique())
-            mod_arr = (sub[moderator] == levels[1]).astype(float).to_numpy()
-            int_term = f"X_val:C({moderator})[T.{levels[1]}]"
+        if categorical_moderator:
+            dummy_frame = pd.get_dummies(sub[moderator].astype(str), drop_first=True, dtype=float)
+            dummy_values = dummy_frame.to_numpy()
+            interactions = x_arr[:, None] * dummy_values
+            X_mat = np.column_stack([np.ones(n), x_arr, dummy_values, interactions])
+            interaction_idx = 2 + dummy_values.shape[1]
+            int_term = f"X_val:C({moderator})[T.{dummy_frame.columns[0]}]"
         else:
             mod_arr = sub[moderator].astype(float).to_numpy()
+            X_mat = np.column_stack([np.ones(n), x_arr, mod_arr, x_arr * mod_arr])
             int_term = f"X_val:{moderator}"
 
-        X_mat = np.column_stack([np.ones(n), x_arr, mod_arr, x_arr * mod_arr])
         res = _matrix_ols_fit(X_mat, y_arr)
-        beta_int = float(res["beta"][3])
-        se_int = float(res["se"][3])
-        t_int = float(res["t_vals"][3])
-        p_int = float(res["p_vals"][3])
+        if not categorical_moderator:
+            interaction_idx = 3
+        beta_int = float(res["beta"][interaction_idx])
+        se_int = float(res["se"][interaction_idx])
+        t_int = float(res["t_vals"][interaction_idx])
+        p_int = float(res["p_vals"][interaction_idx])
         r2 = float(res["r2"])
         adj_r2 = float(res["adj_r2"])
         f_stat = float(res["f_stat"])

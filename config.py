@@ -152,7 +152,12 @@ EVO_SPLIT_SUBASPECT_ITEMS: Dict[str, List[str]] = {
 EVO_OVERLAPPING_ASPECTS: List[str] = ["val", "pro", "evi", "bel"]
 
 # Allowed Demographic Moderators (Religion is strictly excluded)
-ACTIVE_DEMOGRAPHICS: List[str] = ["Age", "Gender", "Religiosity"]
+SCHOOL_TYPE_LABELS: Dict[str, str] = {
+    "PHS": "Public",
+    "SHS": "Science",
+    "PSS": "Pilot",
+}
+ACTIVE_DEMOGRAPHICS: List[str] = ["Age", "Gender", "Religiosity", "School Type"]
 
 # Primary Composites
 SCIENCE_PREDICTORS: List[str] = ["SCI", "SKSI", "ATS"]
