@@ -179,15 +179,19 @@ def _load_survey_data(cache_key: Tuple[str, str]) -> pd.DataFrame:
     # Store explicit _sum and _mean columns for primary composites
     df["SCI_sum"] = complete_sum(ALL_SCIENCE_ITEMS)
     df["SCI_mean"] = complete_mean(ALL_SCIENCE_ITEMS)
+    df["SCI"] = df["SCI_sum"]
 
     df["SKSI_sum"] = complete_sum(SCIENCE_COGNITIVE_ITEMS)
     df["SKSI_mean"] = complete_mean(SCIENCE_COGNITIVE_ITEMS)
+    df["SKSI"] = df["SKSI_sum"]
 
     df["ATS_sum"] = complete_sum(SCIENCE_AFFECTIVE_ITEMS)
     df["ATS_mean"] = complete_mean(SCIENCE_AFFECTIVE_ITEMS)
+    df["ATS"] = df["ATS_sum"]
 
     df["EVO_sum"] = complete_sum(ALL_EVOLUTION_ITEMS)
     df["EVO_mean"] = complete_mean(ALL_EVOLUTION_ITEMS)
+    df["EVO"] = df["EVO_sum"]
 
     df["FCT_mean"] = complete_mean(EVO_FCT_ITEMS)
     df["CRD_mean"] = complete_mean(EVO_CRD_ITEMS)
