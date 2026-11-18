@@ -150,8 +150,44 @@ def inject_ocean_beach_css() -> None:
             font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
             font-weight: 700;
         }}
-        p, span, label {{
-            color: {UI_THEME['text_primary']};
+        section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p,
+        section[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+        section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label,
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label p {{
+            color: {UI_THEME['text_primary']} !important;
+        }}
+        section[data-testid="stSidebar"] [data-testid="stRadio"] label p {{
+            line-height: 1.4;
+            white-space: normal;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="select"],
+        section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+        section[data-testid="stSidebar"] [role="combobox"] {{
+            background-color: #ffffff !important;
+            color: {UI_THEME['text_primary']} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="select"] input,
+        section[data-testid="stSidebar"] [data-baseweb="select"] span,
+        section[data-testid="stSidebar"] [role="combobox"] {{
+            color: {UI_THEME['text_primary']} !important;
+        }}
+        section[data-testid="stSidebar"] [data-baseweb="select"] input::placeholder {{
+            color: {UI_THEME['text_secondary']} !important;
+            opacity: 1;
+        }}
+        [data-baseweb="popover"] [role="listbox"],
+        [data-baseweb="popover"] [data-baseweb="menu"] {{
+            background-color: #ffffff !important;
+            color: {UI_THEME['text_primary']} !important;
+        }}
+        [data-baseweb="popover"] [role="option"],
+        [data-baseweb="popover"] [role="option"] * {{
+            color: {UI_THEME['text_primary']} !important;
+        }}
+        [data-baseweb="popover"] [role="option"]:hover,
+        [data-baseweb="popover"] [role="option"][aria-selected="true"] {{
+            background-color: #ebebeb !important;
         }}
         div[data-testid="stTabs"] [role="tablist"] {{
             align-items: flex-end;
@@ -247,17 +283,17 @@ def inject_ocean_beach_css() -> None:
         div[data-testid="stSlider"] [data-baseweb="slider"] div[style*="background"] {{
             background-color: #000000 !important;
         }}
-        div[data-baseweb="tag"] {{
+        section[data-testid="stSidebar"] div[data-baseweb="tag"] {{
             background-color: #ebebeb !important;
             color: #000000 !important;
             border: 1px solid #c0c0c0 !important;
             border-radius: 4px !important;
         }}
-        div[data-baseweb="tag"] span {{
+        section[data-testid="stSidebar"] div[data-baseweb="tag"] span {{
             color: #000000 !important;
             font-weight: 500 !important;
         }}
-        div[data-baseweb="tag"] svg {{
+        section[data-testid="stSidebar"] div[data-baseweb="tag"] svg {{
             fill: #000000 !important;
         }}
         div[data-testid="stSegmentedControl"] button[aria-checked="true"] {{
