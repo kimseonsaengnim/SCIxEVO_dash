@@ -146,42 +146,49 @@ def load_survey_data() -> pd.DataFrame:
     df["Religiosity"] = df["Religiosity"].astype(str).str.strip()
     df["Age"] = df["Age"].astype(int)
 
-    # Compute FCT and CRD raw composite sums & verify pre-computed composites
-    df["FCT_sum"] = df[EVO_FCT_ITEMS].sum(axis=1)
-    df["CRD_sum"] = df[EVO_CRD_ITEMS].sum(axis=1)
+    def complete_sum(items: List[str]) -> pd.Series:
+        return df[items].sum(axis=1, min_count=len(items))
+
+    def complete_mean(items: List[str]) -> pd.Series:
+        item_values = df[items]
+        return item_values.mean(axis=1).where(item_values.notna().all(axis=1))
+
+    # Require every item in a scale so missing responses cannot produce partial scores.
+    df["FCT_sum"] = complete_sum(EVO_FCT_ITEMS)
+    df["CRD_sum"] = complete_sum(EVO_CRD_ITEMS)
     df["FCT"] = df["FCT_sum"]
     df["CRD"] = df["CRD_sum"]
 
     # Store explicit _sum and _mean columns for primary composites
-    df["SCI_sum"] = df["SCI"]
-    df["SCI_mean"] = df[ALL_SCIENCE_ITEMS].mean(axis=1)
+    df["SCI_sum"] = complete_sum(ALL_SCIENCE_ITEMS)
+    df["SCI_mean"] = complete_mean(ALL_SCIENCE_ITEMS)
 
-    df["SKSI_sum"] = df["SKSI"]
-    df["SKSI_mean"] = df[SCIENCE_COGNITIVE_ITEMS].mean(axis=1)
+    df["SKSI_sum"] = complete_sum(SCIENCE_COGNITIVE_ITEMS)
+    df["SKSI_mean"] = complete_mean(SCIENCE_COGNITIVE_ITEMS)
 
-    df["ATS_sum"] = df["ATS"]
-    df["ATS_mean"] = df[SCIENCE_AFFECTIVE_ITEMS].mean(axis=1)
+    df["ATS_sum"] = complete_sum(SCIENCE_AFFECTIVE_ITEMS)
+    df["ATS_mean"] = complete_mean(SCIENCE_AFFECTIVE_ITEMS)
 
-    df["EVO_sum"] = df["EVO"]
-    df["EVO_mean"] = df[ALL_EVOLUTION_ITEMS].mean(axis=1)
+    df["EVO_sum"] = complete_sum(ALL_EVOLUTION_ITEMS)
+    df["EVO_mean"] = complete_mean(ALL_EVOLUTION_ITEMS)
 
-    df["FCT_mean"] = df[EVO_FCT_ITEMS].mean(axis=1)
-    df["CRD_mean"] = df[EVO_CRD_ITEMS].mean(axis=1)
+    df["FCT_mean"] = complete_mean(EVO_FCT_ITEMS)
+    df["CRD_mean"] = complete_mean(EVO_CRD_ITEMS)
 
     # Compute 14 Science Aspect scores (Raw Sum and 1-5 Mean)
     for asp, items in SCIENCE_ASPECT_ITEMS.items():
-        df[f"{asp}_sum"] = df[items].sum(axis=1)
-        df[f"{asp}_mean"] = df[items].mean(axis=1)
+        df[f"{asp}_sum"] = complete_sum(items)
+        df[f"{asp}_mean"] = complete_mean(items)
 
     # Compute 6 Evolution Aspect scores (Raw Sum and 1-5 Mean)
     for asp, items in EVO_ASPECT_ITEMS.items():
-        df[f"{asp}_sum"] = df[items].sum(axis=1)
-        df[f"{asp}_mean"] = df[items].mean(axis=1)
+        df[f"{asp}_sum"] = complete_sum(items)
+        df[f"{asp}_mean"] = complete_mean(items)
 
     # Compute 10 Evolution Epistemic Split Sub-Aspect scores (Raw Sum and 1-5 Mean)
     for sub_asp, items in EVO_SPLIT_SUBASPECT_ITEMS.items():
-        df[f"{sub_asp}_sum"] = df[items].sum(axis=1)
-        df[f"{sub_asp}_mean"] = df[items].mean(axis=1)
+        df[f"{sub_asp}_sum"] = complete_sum(items)
+        df[f"{sub_asp}_mean"] = complete_mean(items)
 
     return df
 
