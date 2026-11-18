@@ -170,46 +170,51 @@ def _load_survey_data(cache_key: Tuple[str, str]) -> pd.DataFrame:
         item_values = df[items]
         return item_values.mean(axis=1).where(item_values.notna().all(axis=1))
 
+    derived_columns: Dict[str, pd.Series] = {}
+
     # Require every item in a scale so missing responses cannot produce partial scores.
-    df["FCT_sum"] = complete_sum(EVO_FCT_ITEMS)
-    df["CRD_sum"] = complete_sum(EVO_CRD_ITEMS)
-    df["FCT"] = df["FCT_sum"]
-    df["CRD"] = df["CRD_sum"]
+    derived_columns["FCT_sum"] = complete_sum(EVO_FCT_ITEMS)
+    derived_columns["CRD_sum"] = complete_sum(EVO_CRD_ITEMS)
+    derived_columns["FCT"] = derived_columns["FCT_sum"]
+    derived_columns["CRD"] = derived_columns["CRD_sum"]
 
     # Store explicit _sum and _mean columns for primary composites
-    df["SCI_sum"] = complete_sum(ALL_SCIENCE_ITEMS)
-    df["SCI_mean"] = complete_mean(ALL_SCIENCE_ITEMS)
-    df["SCI"] = df["SCI_sum"]
+    derived_columns["SCI_sum"] = complete_sum(ALL_SCIENCE_ITEMS)
+    derived_columns["SCI_mean"] = complete_mean(ALL_SCIENCE_ITEMS)
+    derived_columns["SCI"] = derived_columns["SCI_sum"]
 
-    df["SKSI_sum"] = complete_sum(SCIENCE_COGNITIVE_ITEMS)
-    df["SKSI_mean"] = complete_mean(SCIENCE_COGNITIVE_ITEMS)
-    df["SKSI"] = df["SKSI_sum"]
+    derived_columns["SKSI_sum"] = complete_sum(SCIENCE_COGNITIVE_ITEMS)
+    derived_columns["SKSI_mean"] = complete_mean(SCIENCE_COGNITIVE_ITEMS)
+    derived_columns["SKSI"] = derived_columns["SKSI_sum"]
 
-    df["ATS_sum"] = complete_sum(SCIENCE_AFFECTIVE_ITEMS)
-    df["ATS_mean"] = complete_mean(SCIENCE_AFFECTIVE_ITEMS)
-    df["ATS"] = df["ATS_sum"]
+    derived_columns["ATS_sum"] = complete_sum(SCIENCE_AFFECTIVE_ITEMS)
+    derived_columns["ATS_mean"] = complete_mean(SCIENCE_AFFECTIVE_ITEMS)
+    derived_columns["ATS"] = derived_columns["ATS_sum"]
 
-    df["EVO_sum"] = complete_sum(ALL_EVOLUTION_ITEMS)
-    df["EVO_mean"] = complete_mean(ALL_EVOLUTION_ITEMS)
-    df["EVO"] = df["EVO_sum"]
+    derived_columns["EVO_sum"] = complete_sum(ALL_EVOLUTION_ITEMS)
+    derived_columns["EVO_mean"] = complete_mean(ALL_EVOLUTION_ITEMS)
+    derived_columns["EVO"] = derived_columns["EVO_sum"]
 
-    df["FCT_mean"] = complete_mean(EVO_FCT_ITEMS)
-    df["CRD_mean"] = complete_mean(EVO_CRD_ITEMS)
+    derived_columns["FCT_mean"] = complete_mean(EVO_FCT_ITEMS)
+    derived_columns["CRD_mean"] = complete_mean(EVO_CRD_ITEMS)
 
     # Compute 14 Science Aspect scores (Raw Sum and 1-5 Mean)
     for asp, items in SCIENCE_ASPECT_ITEMS.items():
-        df[f"{asp}_sum"] = complete_sum(items)
-        df[f"{asp}_mean"] = complete_mean(items)
+        derived_columns[f"{asp}_sum"] = complete_sum(items)
+        derived_columns[f"{asp}_mean"] = complete_mean(items)
 
     # Compute 6 Evolution Aspect scores (Raw Sum and 1-5 Mean)
     for asp, items in EVO_ASPECT_ITEMS.items():
-        df[f"{asp}_sum"] = complete_sum(items)
-        df[f"{asp}_mean"] = complete_mean(items)
+        derived_columns[f"{asp}_sum"] = complete_sum(items)
+        derived_columns[f"{asp}_mean"] = complete_mean(items)
 
     # Compute 10 Evolution Epistemic Split Sub-Aspect scores (Raw Sum and 1-5 Mean)
     for sub_asp, items in EVO_SPLIT_SUBASPECT_ITEMS.items():
-        df[f"{sub_asp}_sum"] = complete_sum(items)
-        df[f"{sub_asp}_mean"] = complete_mean(items)
+        derived_columns[f"{sub_asp}_sum"] = complete_sum(items)
+        derived_columns[f"{sub_asp}_mean"] = complete_mean(items)
+
+    df = df.drop(columns=list(derived_columns), errors="ignore")
+    df = pd.concat([df, pd.DataFrame(derived_columns, index=df.index)], axis=1)
 
     return df
 
