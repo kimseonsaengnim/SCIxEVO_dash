@@ -5,6 +5,7 @@ parsing, cross-validation, multi-mode aspect scoring (Mean 1-5, Raw Sum, Z-Score
 parametric/non-parametric psychometric statistical modeling.
 """
 
+import hashlib
 from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
@@ -52,8 +53,15 @@ from config import (
 # ==============================================================================
 # 1. CACHED DATA LOADING & DYNAMIC PARSING
 # ==============================================================================
+def _input_file_fingerprint(filename: str) -> Tuple[str, str]:
+    """Return a stable cache key that changes when a resolved input file changes."""
+    path = resolve_input_file(filename)
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return str(path.resolve()), digest
+
+
 @cache_decorator
-def load_and_validate_metadata() -> Dict[str, Any]:
+def _load_and_validate_metadata(cache_key: Tuple[Tuple[str, str], Tuple[str, str]]) -> Dict[str, Any]:
     """
     Dynamically load and parse TG.csv and TGcodes.csv, cross-validating against
     theoretical construct and aspect mappings.
@@ -118,8 +126,17 @@ def load_and_validate_metadata() -> Dict[str, Any]:
     }
 
 
+def load_and_validate_metadata() -> Dict[str, Any]:
+    """Load metadata, invalidating the cache when either metadata CSV changes."""
+    cache_key = (
+        _input_file_fingerprint("TG.csv"),
+        _input_file_fingerprint("TGcodes.csv"),
+    )
+    return _load_and_validate_metadata(cache_key)
+
+
 @cache_decorator
-def load_survey_data() -> pd.DataFrame:
+def _load_survey_data(cache_key: Tuple[str, str]) -> pd.DataFrame:
     """
     Load 2026data_rev.csv (N=121), strictly drop the 'Religion' column on load,
     and compute raw sums and 1-5 item means for all constructs, aspects, and
@@ -191,6 +208,11 @@ def load_survey_data() -> pd.DataFrame:
         df[f"{sub_asp}_mean"] = complete_mean(items)
 
     return df
+
+
+def load_survey_data() -> pd.DataFrame:
+    """Load survey data, invalidating the cache when the survey CSV changes."""
+    return _load_survey_data(_input_file_fingerprint("2026data_rev.csv"))
 
 
 # ==============================================================================
