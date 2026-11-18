@@ -465,13 +465,19 @@ def fit_moderation_ols(
         model = smf.ols(formula, data=sub).fit()
         interaction_terms = [t for t in model.params.index if ":" in t]
         if interaction_terms:
-            int_term = interaction_terms[0]
-            beta_int = float(model.params[int_term])
-            p_int = float(model.pvalues[int_term])
-            t_int = float(model.tvalues[int_term])
-            se_int = float(model.bse[int_term])
+            interaction_stats = [
+                {
+                    "term": term,
+                    "beta": float(model.params[term]),
+                    "se": float(model.bse[term]),
+                    "t": float(model.tvalues[term]),
+                    "p": float(model.pvalues[term]),
+                    "stars": format_sig_stars(float(model.pvalues[term])),
+                }
+                for term in interaction_terms
+            ]
         else:
-            int_term, beta_int, p_int, t_int, se_int = "N/A", np.nan, np.nan, np.nan, np.nan
+            interaction_stats = []
         r2 = float(model.rsquared)
         adj_r2 = float(model.rsquared_adj)
         f_stat = float(model.fvalue) if model.fvalue is not None else np.nan
@@ -489,19 +495,44 @@ def fit_moderation_ols(
         else:
             mod_arr = sub[moderator].astype(float).to_numpy()
             X_mat = np.column_stack([np.ones(n), x_arr, mod_arr, x_arr * mod_arr])
-            int_term = f"X_val:{moderator}"
 
         res = _matrix_ols_fit(X_mat, y_arr)
-        if not categorical_moderator:
+        if categorical_moderator:
+            interaction_levels = list(dummy_frame.columns)
+            interaction_stats = [
+                {
+                    "term": f"X_val:{category_term}[T.{level}]",
+                    "beta": float(res["beta"][interaction_idx + idx]),
+                    "se": float(res["se"][interaction_idx + idx]),
+                    "t": float(res["t_vals"][interaction_idx + idx]),
+                    "p": float(res["p_vals"][interaction_idx + idx]),
+                    "stars": format_sig_stars(float(res["p_vals"][interaction_idx + idx])),
+                }
+                for idx, level in enumerate(interaction_levels)
+            ]
+        else:
             interaction_idx = 3
-        beta_int = float(res["beta"][interaction_idx])
-        se_int = float(res["se"][interaction_idx])
-        t_int = float(res["t_vals"][interaction_idx])
-        p_int = float(res["p_vals"][interaction_idx])
+            interaction_stats = [{
+                "term": f"X_val:{moderator}",
+                "beta": float(res["beta"][interaction_idx]),
+                "se": float(res["se"][interaction_idx]),
+                "t": float(res["t_vals"][interaction_idx]),
+                "p": float(res["p_vals"][interaction_idx]),
+                "stars": format_sig_stars(float(res["p_vals"][interaction_idx])),
+            }]
         r2 = float(res["r2"])
         adj_r2 = float(res["adj_r2"])
         f_stat = float(res["f_stat"])
         f_pval = float(res["f_pval"])
+
+    first_interaction = interaction_stats[0] if interaction_stats else {
+        "term": "N/A",
+        "beta": np.nan,
+        "se": np.nan,
+        "t": np.nan,
+        "p": np.nan,
+        "stars": "",
+    }
 
     # Compute per-level OLS slopes
     subgroup_slopes: List[Dict[str, Any]] = []
@@ -532,12 +563,13 @@ def fit_moderation_ols(
         "adj_r2": adj_r2,
         "f_stat": f_stat,
         "f_pval": f_pval,
-        "interaction_term": int_term,
-        "beta_interaction": beta_int,
-        "se_interaction": se_int,
-        "t_interaction": t_int,
-        "p_interaction": p_int,
-        "stars_interaction": format_sig_stars(p_int),
+        "interaction_terms": interaction_stats,
+        "interaction_term": first_interaction["term"],
+        "beta_interaction": first_interaction["beta"],
+        "se_interaction": first_interaction["se"],
+        "t_interaction": first_interaction["t"],
+        "p_interaction": first_interaction["p"],
+        "stars_interaction": first_interaction["stars"],
         "subgroup_slopes": subgroup_slopes,
     }
 

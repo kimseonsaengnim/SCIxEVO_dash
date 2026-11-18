@@ -617,11 +617,15 @@ def main() -> None:
         )
 
         if mod_res.get("valid"):
+            interaction_readout = "<br>".join(
+                f"• <b>Interaction Term ({term['term']}):</b> β = {term['beta']:.4f}{term['stars']} "
+                f"(SE = {term['se']:.4f}, t = {term['t']:.3f}, two-tailed p = {term['p']:.4f})"
+                for term in mod_res.get("interaction_terms", [])
+            )
             st.markdown(
                 f"""<div class="insight-banner">
                 <b>Automated OLS Moderation Readout ({mod_res['formula']}):</b><br>
-                • <b>Interaction Term ({mod_res['interaction_term']}):</b> β = {mod_res['beta_interaction']:.4f}{mod_res['stars_interaction']}
-                (SE = {mod_res['se_interaction']:.4f}, t = {mod_res['t_interaction']:.3f}, two-tailed p = {mod_res['p_interaction']:.4f})<br>
+                {interaction_readout}<br>
                 • <b>Overall Model Fit:</b> R² = {mod_res['r2']:.4f} (Adjusted R² = {mod_res['adj_r2']:.4f}),
                 F = {mod_res['f_stat']:.3f} (p = {mod_res['f_pval']:.3e}), Active n = {mod_res['n']}
                 </div>""",

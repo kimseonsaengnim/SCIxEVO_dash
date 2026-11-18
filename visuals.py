@@ -1035,11 +1035,13 @@ def plot_faceted_moderation_regressions(
         if col_idx == 1:
             fig.update_yaxes(title_text=y_label, row=1, col=col_idx)
 
+    interaction_summary = "; ".join(
+        f"{term['term']}: β={term['beta']:.3f}{term['stars']}, p={term['p']:.3f}"
+        for term in mod_res.get("interaction_terms", [])
+    )
     subtitle = (
-        f"OLS Interaction Term ({mod_res['interaction_term']}): "
-        f"β_interaction = {mod_res['beta_interaction']:.3f}{mod_res['stars_interaction']} "
-        f"(p = {mod_res['p_interaction']:.3f}) | Model F = {mod_res['f_stat']:.2f}, R² = {mod_res['r2']:.3f}"
-        if mod_res.get("valid") and not pd.isna(mod_res.get("beta_interaction", np.nan))
+        f"OLS Interaction Terms ({interaction_summary}) | Model F = {mod_res['f_stat']:.2f}, R² = {mod_res['r2']:.3f}"
+        if mod_res.get("valid") and interaction_summary
         else "Subgroup OLS Comparison"
     )
     apply_ocean_beach_layout(
