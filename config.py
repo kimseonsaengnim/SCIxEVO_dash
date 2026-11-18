@@ -28,52 +28,82 @@ def resolve_input_file(filename: str) -> Path:
 
 
 # ==============================================================================
-# 2. OCEAN BEACH PALETTE & UI THEME CONSTANTS
-# Source: https://pikka.app/palettes/ocean-beach-palette
+# 2. MONOCHROMATIC BLACK & WHITE PALETTE & UI THEME CONSTANTS
 # ==============================================================================
-OCEAN_BEACH_PALETTE: Dict[str, str] = {
-    "deep_ocean_blue": "#003f5c",
-    "twilight_indigo": "#2f4b7c",
-    "dusk_purple": "#665191",
-    "berry_violet": "#a05195",
-    "coral_rose": "#d45087",
-    "sunset_crimson": "#f95d6a",
-    "warm_tangerine": "#ff7c43",
-    "golden_sun": "#ffa600",
+MONOCHROME_PALETTE: Dict[str, str] = {
+    "black": "#000000",
+    "charcoal": "#222222",
+    "dark_gray": "#444444",
+    "slate_gray": "#666666",
+    "medium_gray": "#888888",
+    "silver": "#aaaaaa",
+    "light_gray": "#cccccc",
+    "off_white": "#f0f0f0",
 }
 
-OCEAN_BEACH_SEQUENCE: List[str] = [
-    "#003f5c",
-    "#2f4b7c",
-    "#665191",
-    "#a05195",
-    "#d45087",
-    "#f95d6a",
-    "#ff7c43",
-    "#ffa600",
+# Retained with monochromatic mappings for complete backwards compatibility
+OCEAN_BEACH_PALETTE: Dict[str, str] = {
+    "deep_ocean_blue": "#000000",   # Solid Black (Primary Cognitive / Fact Anchor)
+    "twilight_indigo": "#222222",   # Deep Charcoal
+    "dusk_purple": "#555555",       # Slate Dark Gray
+    "berry_violet": "#666666",      # Mid Gray
+    "coral_rose": "#888888",        # Neutral Medium Gray
+    "sunset_crimson": "#000000",    # Black (OLS Regression / Critical Trendlines)
+    "warm_tangerine": "#777777",    # Neutral Gray (Affective / Credibility Accent)
+    "golden_sun": "#ffffff",        # Pure White (Crisp High-Contrast Markers)
+}
+
+MONOCHROME_SEQUENCE: List[str] = [
+    "#000000",  # Solid Black
+    "#333333",  # Deep Charcoal
+    "#555555",  # Dark Slate
+    "#777777",  # Mid Neutral Gray
+    "#999999",  # Neutral Gray
+    "#bbbbbb",  # Silver Gray
+    "#d8d8d8",  # Light Gray
+    "#f0f0f0",  # Near White
 ]
 
+OCEAN_BEACH_SEQUENCE: List[str] = MONOCHROME_SEQUENCE
+
 UI_THEME: Dict[str, str] = {
-    "bg_main": "#f8f9fa",          # Main Coastal Foam
-    "bg_card": "#eef2f5",          # Cool Coastal Card Surface
-    "bg_sidebar": "#fff9f0",       # Warm Sand Sidebar/Card Surface
-    "text_primary": "#003f5c",     # Primary Headers / Text
-    "text_secondary": "#2f4b7c",   # Secondary / Muted Text
-    "accent_fct": "#003f5c",       # Deep Ocean for FCT / Cognitive Constructs
-    "accent_fct_alt": "#2f4b7c",   # Twilight Indigo secondary cognitive accent
-    "accent_crd": "#f95d6a",       # Sunset Crimson for CRD / Affective Constructs
-    "accent_crd_alt": "#ff7c43",   # Warm Tangerine secondary affective accent
-    "accent_gold": "#ffa600",      # Golden Sun highlight
-    "border_color": "#d6e0e8",
+    "bg_main": "#ffffff",          # Crisp Pure White Main Canvas
+    "bg_card": "#f8f8f8",          # Clean Light Gray Card Surface
+    "bg_sidebar": "#f4f4f4",       # Subtle Neutral Sidebar Surface
+    "text_primary": "#000000",     # Pure Black Primary Headers / Text
+    "text_secondary": "#555555",   # Charcoal Muted / Secondary Text
+    "accent_fct": "#000000",       # Solid Black for FCT / Fact Constructs
+    "accent_fct_alt": "#333333",   # Deep Charcoal secondary cognitive accent
+    "accent_crd": "#777777",       # Neutral Mid Gray for CRD / Credibility Constructs
+    "accent_crd_alt": "#999999",   # Silver secondary affective accent
+    "accent_gold": "#000000",      # Solid Black accent
+    "border_color": "#d0d0d0",     # Minimal Neutral Border
+    "border_dark": "#000000",      # Solid Black Accent Border
 }
 
-# Likert 1-5 Diverging Gradient (Strongly Disagree -> Strongly Agree)
+CORRELATION_COLORSCALE = [
+    [0.0, "#686868"],
+    [0.25, "#b4b4b4"],
+    [0.5, "#ffffff"],
+    [0.75, "#888888"],
+    [1.0, "#111111"],
+]
+
+DENSITY_COLORSCALE = [
+    [0.0, "#ffffff"],
+    [0.25, "#dcdcdc"],
+    [0.5, "#999999"],
+    [0.75, "#555555"],
+    [1.0, "#000000"],
+]
+
+# Likert 1-5 Monochromatic Gradient (Strongly Disagree -> Strongly Agree)
 LIKERT_COLORS: Dict[int, str] = {
-    1: "#003f5c",  # 1 - Strongly Disagree (Deep Ocean Blue)
-    2: "#665191",  # 2 - Disagree (Dusk Purple)
-    3: "#d45087",  # 3 - Neutral / Undecided (Coral Rose)
-    4: "#ff7c43",  # 4 - Agree (Warm Tangerine)
-    5: "#ffa600",  # 5 - Strongly Agree (Golden Sun)
+    1: "#0a0a0a",  # 1 - Strongly Disagree (Deep Solid Black)
+    2: "#4a4a4a",  # 2 - Disagree (Dark Charcoal Gray)
+    3: "#8c8c8c",  # 3 - Neutral / Undecided (Balanced Mid Gray)
+    4: "#c7c7c7",  # 4 - Agree (Light Silver Gray)
+    5: "#f2f2f2",  # 5 - Strongly Agree (Crisp Off-White with dark boundary)
 }
 
 LIKERT_LABELS: Dict[int, str] = {

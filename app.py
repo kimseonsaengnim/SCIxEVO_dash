@@ -3,7 +3,7 @@ Main Streamlit BI Dashboard Application (`app.py`)
 Investigates the relationship between Views on Science (`SCI`, `SKSI`, `ATS`) and
 Views on Evolution (`EVO`, split into Fact `FCT` and Credibility `CRD`) across N = 121
 respondents, moderated by Age, Gender, Religiosity, and School Type (Religion strictly excluded).
-Styled in the Ocean Beach Palette (https://pikka.app/palettes/ocean-beach-palette).
+Styled in a purely monochromatic black and white theme.
 """
 
 from typing import Any, Dict, List, Tuple
@@ -130,10 +130,10 @@ from visuals import (
 
 
 # ==============================================================================
-# 1. CUSTOM OCEAN BEACH CSS STYLING
+# 1. CUSTOM MONOCHROME BLACK & WHITE CSS STYLING
 # ==============================================================================
 def inject_ocean_beach_css() -> None:
-    """Inject custom Ocean Beach CSS variables and card styling into the Streamlit app."""
+    """Inject custom Monochromatic Black & White CSS variables and component styling into Streamlit."""
     st.markdown(
         f"""
         <style>
@@ -145,23 +145,27 @@ def inject_ocean_beach_css() -> None:
             background-color: {UI_THEME['bg_sidebar']};
             border-right: 1px solid {UI_THEME['border_color']};
         }}
-        h1, h2, h3, h4 {{
+        h1, h2, h3, h4, h5, h6 {{
             color: {UI_THEME['text_primary']} !important;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            font-weight: 700;
+        }}
+        p, span, label {{
+            color: {UI_THEME['text_primary']};
         }}
         div[data-testid="stTabs"] [role="tablist"] {{
             align-items: flex-end;
-            border-bottom: 1px solid {UI_THEME['border_color']} !important;
+            border-bottom: 2px solid #000000 !important;
             gap: 0.35rem !important;
             padding: 0 0.35rem !important;
         }}
         div[data-testid="stTabs"] [role="tab"] {{
-            background: linear-gradient(180deg, #ffffff 0%, {UI_THEME['bg_card']} 100%) !important;
+            background: #f7f7f7 !important;
             border: 1px solid {UI_THEME['border_color']} !important;
-            border-bottom-color: {UI_THEME['border_color']} !important;
-            border-left: 4px solid {UI_THEME['border_color']} !important;
-            border-radius: 8px 8px 0 0 !important;
-            color: {UI_THEME['text_primary']} !important;
+            border-bottom: none !important;
+            border-left: 4px solid #888888 !important;
+            border-radius: 6px 6px 0 0 !important;
+            color: #333333 !important;
             cursor: pointer !important;
             font-weight: 600 !important;
             margin-bottom: -1px !important;
@@ -176,29 +180,31 @@ def inject_ocean_beach_css() -> None:
             display: none !important;
         }}
         div[data-testid="stTabs"] [role="tab"]:hover {{
-            border-color: {OCEAN_BEACH_PALETTE['warm_tangerine']} !important;
-            border-bottom-color: {UI_THEME['border_color']} !important;
+            border-color: #000000 !important;
+            background: #eeeeee !important;
+            color: #000000 !important;
         }}
         div[data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
-            background: linear-gradient(180deg, #ffffff 0%, {UI_THEME['bg_card']} 100%) !important;
-            border-color: {UI_THEME['border_color']} !important;
-            border-bottom-color: {UI_THEME['bg_main']} !important;
-            border-left: 4px solid {OCEAN_BEACH_PALETTE['deep_ocean_blue']} !important;
-            box-shadow: 0 -2px 6px rgba(0, 63, 92, 0.06) !important;
-            color: {UI_THEME['text_primary']} !important;
+            background: #ffffff !important;
+            border-color: #000000 !important;
+            border-bottom: 2px solid #ffffff !important;
+            border-left: 4px solid #000000 !important;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08) !important;
+            color: #000000 !important;
+            font-weight: 700 !important;
         }}
         div[data-testid="stTabs"] [role="tab"]:focus-visible {{
-            outline: 3px solid {OCEAN_BEACH_PALETTE['sunset_crimson']} !important;
+            outline: 2px solid #000000 !important;
             outline-offset: 2px !important;
         }}
         .kpi-card {{
-            background: linear-gradient(180deg, #ffffff 0%, {UI_THEME['bg_card']} 100%);
+            background: #fafafa;
             border: 1px solid {UI_THEME['border_color']};
-            border-left: 5px solid {OCEAN_BEACH_PALETTE['deep_ocean_blue']};
-            border-radius: 10px;
+            border-left: 5px solid #000000;
+            border-radius: 8px;
             box-sizing: border-box;
             padding: 14px 16px;
-            box-shadow: 0 2px 6px rgba(0, 63, 92, 0.06);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
             height: 150px;
@@ -215,7 +221,7 @@ def inject_ocean_beach_css() -> None:
         .kpi-value {{
             font-size: 1.50rem;
             font-weight: 800;
-            color: {UI_THEME['text_primary']};
+            color: #000000;
             line-height: 1.2;
         }}
         .kpi-sub {{
@@ -224,14 +230,53 @@ def inject_ocean_beach_css() -> None:
             margin-top: auto;
         }}
         .insight-banner {{
-            background-color: {UI_THEME['bg_sidebar']};
+            background-color: #f7f7f7;
             border: 1px solid {UI_THEME['border_color']};
-            border-left: 4px solid {OCEAN_BEACH_PALETTE['warm_tangerine']};
-            border-radius: 8px;
+            border-left: 5px solid #000000;
+            border-radius: 6px;
             padding: 12px 16px;
             margin-bottom: 14px;
             color: {UI_THEME['text_primary']};
             font-size: 0.92rem;
+        }}
+        /* Streamlit Native Control Monochrome Enforcements */
+        div[data-testid="stSlider"] div[role="slider"] {{
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+        }}
+        div[data-testid="stSlider"] [data-baseweb="slider"] div[style*="background"] {{
+            background-color: #000000 !important;
+        }}
+        div[data-baseweb="tag"] {{
+            background-color: #ebebeb !important;
+            color: #000000 !important;
+            border: 1px solid #c0c0c0 !important;
+            border-radius: 4px !important;
+        }}
+        div[data-baseweb="tag"] span {{
+            color: #000000 !important;
+            font-weight: 500 !important;
+        }}
+        div[data-baseweb="tag"] svg {{
+            fill: #000000 !important;
+        }}
+        div[data-testid="stSegmentedControl"] button[aria-checked="true"] {{
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }}
+        div[data-testid="stSegmentedControl"] button {{
+            border-color: {UI_THEME['border_color']} !important;
+            color: #111111 !important;
+        }}
+        div[data-testid="stExpander"] {{
+            border: 1px solid {UI_THEME['border_color']} !important;
+            border-radius: 6px !important;
+            background-color: #ffffff !important;
+        }}
+        div[data-testid="stDataFrame"] {{
+            border: 1px solid {UI_THEME['border_color']} !important;
+            border-radius: 6px !important;
         }}
         </style>
         """,
@@ -253,9 +298,9 @@ def render_sidebar_controls(
 ) -> Dict[str, Any]:
     """Render global sidebar slicers and psychometric configuration controls."""
     st.sidebar.markdown(
-        f"<h1 style='color:{UI_THEME['text_primary']};margin-bottom:0;'>Cohort Controls</h2>"
+        f"<h2 style='color:{UI_THEME['text_primary']};margin-bottom:0;'>Cohort Controls</h2>"
         f"<p style='color:{UI_THEME['text_secondary']};font-size:0.84rem;margin-top:2px;'>"
-        "INSERT DESCRIPTION HERE</p>",
+        "Configure sample cohort filters and analytical criteria.</p>",
         unsafe_allow_html=True,
     )
 

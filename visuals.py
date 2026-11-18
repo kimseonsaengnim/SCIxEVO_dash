@@ -1,6 +1,6 @@
 """
 Reusable Plotly Visualization Library for the Psychometric & Epistemic BI Dashboard.
-All charts are styled in the Ocean Beach Palette (https://pikka.app/palettes/ocean-beach-palette)
+Styled in a purely monochromatic black and white theme with crisp grayscale contrasts
 and dynamically labeled using TGcodes.csv meanings.
 """
 
@@ -70,11 +70,12 @@ except ImportError:
         return _DummyFigure(layout={"subplots": kwargs})
 
 from config import (
+    CORRELATION_COLORSCALE,
+    DENSITY_COLORSCALE,
     EVO_ALL_ASPECTS,
     LIKERT_COLORS,
     LIKERT_LABELS,
-    OCEAN_BEACH_PALETTE,
-    OCEAN_BEACH_SEQUENCE,
+    MONOCHROME_SEQUENCE,
     SCIENCE_ALL_ASPECTS,
     UI_THEME,
 )
@@ -85,56 +86,40 @@ from data_engine import (
 
 
 # ==============================================================================
-# 1. GLOBAL OCEAN BEACH THEME LAYOUT HELPER
+# 1. GLOBAL MONOCHROME THEME LAYOUT HELPER
 # ==============================================================================
-OCEAN_BEACH_COLORSCALE: List[List[Any]] = [
-    [0.00, "#003f5c"],
-    [0.25, "#2f4b7c"],
-    [0.50, "#f8f9fa"],
-    [0.75, "#f95d6a"],
-    [0.90, "#ff7c43"],
-    [1.00, "#ffa600"],
-]
-
-OCEAN_BEACH_SEQUENTIAL_DENSITY: List[List[Any]] = [
-    [0.00, "#f8f9fa"],
-    [0.25, "#eef2f5"],
-    [0.50, "#665191"],
-    [0.75, "#d45087"],
-    [1.00, "#ffa600"],
-]
 
 MODERATOR_COLOR_MAPS: Dict[str, Dict[str, str]] = {
     "Religiosity": {
-        "Religious": "#003f5c",
-        "Non Religious": "#ff7c43",
+        "Religious": "#000000",       # Solid Black
+        "Non Religious": "#777777",   # Medium Neutral Gray
     },
     "Gender": {
-        "F": "#d45087",
-        "M": "#003f5c",
+        "F": "#777777",               # Medium Neutral Gray
+        "M": "#000000",               # Solid Black
     },
     "Age": {
-        "14": "#003f5c",
-        "15": "#2f4b7c",
-        "16": "#665191",
-        "17": "#f95d6a",
-        "18": "#ffa600",
+        "14": "#000000",              # Solid Black
+        "15": "#333333",              # Deep Charcoal
+        "16": "#666666",              # Dark Gray
+        "17": "#999999",              # Medium Gray
+        "18": "#cccccc",              # Light Gray
     },
     "School Type": {
-        "Public": "#003f5c",
-        "Science": "#ff7c43",
-        "Pilot": "#ffa600",
+        "Public": "#000000",          # Solid Black
+        "Science": "#555555",         # Mid-Dark Gray
+        "Pilot": "#aaaaaa",           # Light-Mid Gray
     },
 }
 
 
-def apply_ocean_beach_layout(
+def apply_monochrome_layout(
     fig: Any,
     title: str,
     subtitle: str = "",
     height: int = 520,
 ) -> Any:
-    """Apply consistent Ocean Beach Palette styling, typography, and surface backgrounds."""
+    """Apply consistent Monochromatic Black & White styling, typography, and surface backgrounds."""
     full_title = (
         f"<b>{title}</b><br><br><span style='font-size:12px;color:{UI_THEME['text_secondary']}'>{subtitle}</span>"
         if subtitle
@@ -153,29 +138,29 @@ def apply_ocean_beach_layout(
         height=height + 55,
         margin=dict(l=65, r=40, t=140, b=60),
         legend=dict(
-            bgcolor="rgba(255, 249, 240, 0.90)",
+            bgcolor="rgba(255, 255, 255, 0.95)",
             bordercolor=UI_THEME["border_color"],
             borderwidth=1,
             font=dict(size=11, color=UI_THEME["text_primary"]),
         ),
         hoverlabel=dict(
-            bgcolor="#003f5c",
+            bgcolor="#000000",
             font_size=12,
             font_family="Inter, Segoe UI, sans-serif",
             font_color="#ffffff",
         ),
     )
     fig.update_xaxes(
-        gridcolor="#e9ecef",
+        gridcolor="#f0f0f0",
         linecolor=UI_THEME["border_color"],
-        zerolinecolor="#ced4da",
+        zerolinecolor="#cccccc",
         title_font=dict(size=13, color=UI_THEME["text_primary"]),
         tickfont=dict(size=11, color=UI_THEME["text_secondary"]),
     )
     fig.update_yaxes(
-        gridcolor="#e9ecef",
+        gridcolor="#f0f0f0",
         linecolor=UI_THEME["border_color"],
-        zerolinecolor="#ced4da",
+        zerolinecolor="#cccccc",
         title_font=dict(size=13, color=UI_THEME["text_primary"]),
         tickfont=dict(size=11, color=UI_THEME["text_secondary"]),
     )
@@ -217,8 +202,9 @@ def plot_joint_scatter_with_marginals(
         groups = sorted(df[color_by].astype(str).unique())
         for idx, grp_val in enumerate(groups):
             sub = df[df[color_by].astype(str) == grp_val]
-            color = palette_map.get(grp_val, OCEAN_BEACH_SEQUENCE[idx % len(OCEAN_BEACH_SEQUENCE)])
+            color = palette_map.get(grp_val, MONOCHROME_SEQUENCE[idx % len(MONOCHROME_SEQUENCE)])
 
+            pt_border = "#000000" if color in ("#cccccc", "#aaaaaa", "#777777", "#999999", "#bbbbbb", "#d8d8d8", "#f0f0f0") else "#ffffff"
             fig.add_trace(
                 go.Scatter(
                     x=sub[x_col],
@@ -229,8 +215,9 @@ def plot_joint_scatter_with_marginals(
                     marker=dict(
                         color=color,
                         size=9,
+                        symbol=["circle", "diamond", "square", "triangle-up", "cross"][idx % 5],
                         opacity=0.85,
-                        line=dict(width=1, color="#ffffff"),
+                        line=dict(width=1, color=pt_border),
                     ),
                     customdata=np.column_stack([sub["School Type"], sub["Gender"], sub["Religiosity"], sub["Age"]]),
                     hovertemplate=(
@@ -335,7 +322,7 @@ def plot_joint_scatter_with_marginals(
                 x=np.concatenate([ols_res["x_grid"], ols_res["x_grid"][::-1]]),
                 y=np.concatenate([ols_res["ci_high"], ols_res["ci_low"][::-1]]),
                 fill="toself",
-                fillcolor="rgba(249, 93, 106, 0.16)",
+                fillcolor="rgba(0, 0, 0, 0.08)",
                 line=dict(color="rgba(255,255,255,0)"),
                 hoverinfo="skip",
                 name="95% OLS Confidence Band",
@@ -349,7 +336,7 @@ def plot_joint_scatter_with_marginals(
                 y=ols_res["y_hat"],
                 mode="lines",
                 name=f"OLS Trend (β={ols_res['beta']:.2f}, R²={ols_res['r2']:.3f})",
-                line=dict(color=OCEAN_BEACH_PALETTE["sunset_crimson"], width=3),
+                line=dict(color="#000000", width=3),
             ),
             row=2,
             col=1,
@@ -361,7 +348,7 @@ def plot_joint_scatter_with_marginals(
         if not pd.isna(corr_res["r"])
         else f"Active n = {len(df)}"
     )
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"Joint Distribution: {x_label} vs. {y_label}",
         subtitle=subtitle,
@@ -383,7 +370,7 @@ def plot_dual_slope_epistemic_overlay(
 ) -> Any:
     """
     Dual-Slope Epistemic Overlay Canvas: Plots Science Predictor on X-axis (1-5 mean scale)
-    and overlays BOTH FCT (Deep Ocean #003f5c) and CRD (Sunset Crimson #f95d6a) on Y-axis
+    and overlays BOTH FCT (Solid Black #000000) and CRD (Neutral Gray #777777) on Y-axis
     (normalized to a 1-5 mean scale) with separate OLS regression lines and 95% CI bands.
     """
     x_col = f"{predictor_code}_mean"
@@ -403,7 +390,7 @@ def plot_dual_slope_epistemic_overlay(
                 x=np.concatenate([ols_fct["x_grid"], ols_fct["x_grid"][::-1]]),
                 y=np.concatenate([ols_fct["ci_high"], ols_fct["ci_low"][::-1]]),
                 fill="toself",
-                fillcolor="rgba(0, 63, 92, 0.15)",
+                fillcolor="rgba(0, 0, 0, 0.08)",
                 line=dict(color="rgba(255,255,255,0)"),
                 hoverinfo="skip",
                 name="Fact (FCT) 95% CI",
@@ -416,7 +403,7 @@ def plot_dual_slope_epistemic_overlay(
                 x=np.concatenate([ols_crd["x_grid"], ols_crd["x_grid"][::-1]]),
                 y=np.concatenate([ols_crd["ci_high"], ols_crd["ci_low"][::-1]]),
                 fill="toself",
-                fillcolor="rgba(249, 93, 106, 0.15)",
+                fillcolor="rgba(120, 120, 120, 0.10)",
                 line=dict(color="rgba(255,255,255,0)"),
                 hoverinfo="skip",
                 name="Credibility (CRD) 95% CI",
@@ -433,7 +420,7 @@ def plot_dual_slope_epistemic_overlay(
                 color=UI_THEME["accent_fct"],
                 size=8,
                 symbol="circle",
-                opacity=0.75,
+                opacity=0.85,
                 line=dict(width=1, color="#ffffff"),
             ),
             customdata=df["School Type"],
@@ -455,8 +442,8 @@ def plot_dual_slope_epistemic_overlay(
                 color=UI_THEME["accent_crd"],
                 size=8,
                 symbol="diamond",
-                opacity=0.75,
-                line=dict(width=1, color="#ffffff"),
+                opacity=0.85,
+                line=dict(width=1.5, color="#000000"),
             ),
             customdata=df["School Type"],
             hovertemplate=(
@@ -489,12 +476,12 @@ def plot_dual_slope_epistemic_overlay(
         )
 
     subtitle = (
-        f"Normalized 1–5 Likert Scale | FCT Slope β = {ols_fct['beta']:.3f} (p = {ols_fct['p']:.2e}) vs. "
-        f"CRD Slope β = {ols_crd['beta']:.3f} (p = {ols_crd['p']:.2e})"
+        f"Normalized 1–5 Likert Scale | FCT (Solid Black) β = {ols_fct['beta']:.3f} (p = {ols_fct['p']:.2e}) vs. "
+        f"CRD (Dashed Gray) β = {ols_crd['beta']:.3f} (p = {ols_crd['p']:.2e})"
         if not pd.isna(ols_fct["beta"])
         else "Normalized 1–5 Likert Scale"
     )
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"Dual-Slope Epistemic Overlay: {predictor_label} → Fact (FCT) vs. Credibility (CRD)",
         subtitle=subtitle,
@@ -546,25 +533,35 @@ def plot_aspect_correlation_heatmap(
             z=r_mat.values,
             x=col_labels,
             y=row_labels,
-            text=annot_mat.values,
-            texttemplate="%{text}",
-            textfont=dict(size=11, family="Inter, Segoe UI, sans-serif"),
             hovertext=hover_matrix,
             hoverinfo="text",
-            colorscale=OCEAN_BEACH_COLORSCALE,
-            zmin=-0.6,
-            zmax=0.6,
+            colorscale=CORRELATION_COLORSCALE,
+            zmin=-1,
+            zmax=1,
             colorbar=dict(
                 title=dict(text=corr_method, font=dict(size=12, color=UI_THEME["text_primary"])),
-                tickvals=[-0.5, -0.25, 0.0, 0.25, 0.5],
+                tickvals=[-1, -0.5, 0.0, 0.5, 1],
             ),
         )
     )
 
-    apply_ocean_beach_layout(
+    for row_code, row_label in zip(r_mat.index, row_labels):
+        for col_code, col_label in zip(r_mat.columns, col_labels):
+            value = r_mat.loc[row_code, col_code]
+            fig.add_annotation(
+                x=col_label,
+                y=row_label,
+                text=annot_mat.loc[row_code, col_code],
+                showarrow=False,
+                font=dict(
+                    size=11,
+                    color="#ffffff" if pd.notna(value) and (value <= -0.95 or value >= 0.6) else "#000000",
+                ),
+            )
+    apply_monochrome_layout(
         fig,
         title=f"Aspect-to-Aspect Cross-Correlation Matrix ({view_mode})",
-        subtitle=f"{corr_method} | Significance: * p < .05, ** p < .01, *** p < .001 | Ocean Beach Diverging Scale",
+        subtitle=f"{corr_method} | Significance: * p < .05, ** p < .01, *** p < .001 | Signed values show direction",
         height=640,
     )
     fig.update_xaxes(tickangle=-30, side="bottom")
@@ -610,13 +607,14 @@ def plot_bivariate_aspect_drilldown(
         if not np.any(mask):
             continue
         sub = df.loc[mask]
+        pt_border = "#000000" if color in ("#777777", "#aaaaaa", "#cccccc", "#999999") else "#ffffff"
         fig.add_trace(
             go.Scatter(
                 x=x_jit[mask],
                 y=y_jit[mask],
                 mode="markers",
                 name=f"{grp_val} (n={len(sub)})",
-                marker=dict(color=color, size=9, opacity=0.82, line=dict(width=1, color="#ffffff")),
+                marker=dict(color=color, size=9, opacity=0.85, line=dict(width=1, color=pt_border)),
                 customdata=np.column_stack([
                     sub["School Type"],
                     sub[sci_aspect],
@@ -642,7 +640,7 @@ def plot_bivariate_aspect_drilldown(
                 x=np.concatenate([ols_res["x_grid"], ols_res["x_grid"][::-1]]),
                 y=np.concatenate([ols_res["ci_high"], ols_res["ci_low"][::-1]]),
                 fill="toself",
-                fillcolor="rgba(249, 93, 106, 0.16)",
+                fillcolor="rgba(0, 0, 0, 0.08)",
                 line=dict(color="rgba(255,255,255,0)"),
                 hoverinfo="skip",
                 name="95% OLS CI",
@@ -656,7 +654,7 @@ def plot_bivariate_aspect_drilldown(
                 y=ols_res["y_hat"],
                 mode="lines",
                 name=f"OLS Line (β={ols_res['beta']:.2f}, p={ols_res['p']:.3f})",
-                line=dict(color=OCEAN_BEACH_PALETTE["sunset_crimson"], width=3),
+                line=dict(color="#000000", width=3),
             ),
             row=1,
             col=1,
@@ -667,7 +665,7 @@ def plot_bivariate_aspect_drilldown(
             x=x_raw,
             y=y_raw,
             showlegend=False,
-            colorscale=OCEAN_BEACH_SEQUENTIAL_DENSITY,
+            colorscale=DENSITY_COLORSCALE,
             nbinsx=10,
             nbinsy=10,
             colorbar=dict(title="Count", x=1.02, len=0.85),
@@ -687,7 +685,7 @@ def plot_bivariate_aspect_drilldown(
         if not pd.isna(corr_res["r"])
         else "Insufficient variance for OLS"
     )
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"Bivariate Aspect Drill-Down: {sci_label} × {evo_label}",
         subtitle=subtitle,
@@ -716,8 +714,8 @@ def plot_bivariate_aspect_drilldown(
 def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
     """
     Epistemic Divergence Dumbbell Plot across the 4 overlapping EVO aspects
-    (val, pro, evi, bel) plus Overall (FCT vs. CRD), comparing mean Fact (#003f5c)
-    endorsement vs. mean Credibility (#ff7c43) endorsement.
+    (val, pro, evi, bel) plus Overall (FCT vs. CRD), comparing mean Fact (#000000 solid circle)
+    endorsement vs. mean Credibility (#ffffff diamond with black border) endorsement.
     """
     fig = go.Figure()
 
@@ -733,7 +731,7 @@ def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
                 x=[fct_val, crd_val],
                 y=[y_label, y_label],
                 mode="lines",
-                line=dict(color=OCEAN_BEACH_PALETTE["dusk_purple"], width=4),
+                line=dict(color="#888888", width=3),
                 showlegend=False,
                 hoverinfo="skip",
             )
@@ -757,7 +755,7 @@ def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
             name="Fact Subscale (FCT Mean)",
             text=[f"{v:.2f}" for v in dumbbell_df["fct_mean"]],
             textposition="bottom center",
-            marker=dict(color=OCEAN_BEACH_PALETTE["deep_ocean_blue"], size=15, symbol="circle", line=dict(width=2, color="#ffffff")),
+            marker=dict(color="#000000", size=15, symbol="circle", line=dict(width=2, color="#000000")),
             customdata=np.column_stack([dumbbell_df["fct_items"], dumbbell_df["gap_fct_minus_crd"], dumbbell_df["p_val"]]),
             hovertemplate=(
                 "<b>%{y} — Fact (FCT)</b><br>"
@@ -776,7 +774,7 @@ def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
             name="Credibility Subscale (CRD Mean)",
             text=[f"{v:.2f}" for v in dumbbell_df["crd_mean"]],
             textposition="top center",
-            marker=dict(color=OCEAN_BEACH_PALETTE["warm_tangerine"], size=15, symbol="diamond", line=dict(width=2, color="#ffffff")),
+            marker=dict(color="#ffffff", size=15, symbol="diamond", line=dict(width=2.5, color="#000000")),
             customdata=np.column_stack([dumbbell_df["crd_items"], dumbbell_df["gap_fct_minus_crd"], dumbbell_df["p_val"]]),
             hovertemplate=(
                 "<b>%{y} — Credibility (CRD)</b><br>"
@@ -787,13 +785,13 @@ def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
         )
     )
 
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title="Epistemic Divergence Dumbbell Plot: Fact (FCT) vs. Credibility (CRD) Across Overlapping Evolution Aspects",
-        subtitle="Comparing Normalized 1–5 Mean Endorsement | Δ = Mean(FCT) − Mean(CRD) with Paired t-test Significance",
+        subtitle="Comparing Normalized 1–5 Mean Endorsement | Fact (FCT, Black Circle) vs. Credibility (CRD, White Diamond)",
         height=440,
     )
-    fig.update_xaxes(title_text="Normalized Endorsement Mean (1–5 Likert Scale)", range=[2.2, 4.4])
+    fig.update_xaxes(title_text="Normalized Endorsement Mean (1–5 Likert Scale)", range=[1, 5])
     fig.update_yaxes(title_text="Evolution Theoretical Aspect")
     return fig
 
@@ -801,12 +799,12 @@ def plot_epistemic_dumbbell(dumbbell_df: pd.DataFrame) -> Any:
 def plot_likert_diverging_bars(likert_df: pd.DataFrame) -> Any:
     """
     48-Item Diverging Stacked Bar Chart displaying full 1–5 Likert response distributions
-    (Strongly Disagree to Strongly Agree) styled across the Ocean Beach gradient
-    (#003f5c to #ffa600), centered on Neutral (3).
+    (Strongly Disagree to Strongly Agree) styled in five grayscale steps,
+    centered on Neutral (3).
     """
     fig = go.Figure()
     if likert_df.empty:
-        return apply_ocean_beach_layout(fig, "48-Item Diverging Likert Distribution", "No items selected", 400)
+        return apply_monochrome_layout(fig, "48-Item Diverging Likert Distribution", "No items selected", 400)
 
     y_labels = likert_df["display_label"].tolist()
 
@@ -833,7 +831,7 @@ def plot_likert_diverging_bars(likert_df: pd.DataFrame) -> Any:
                 base=bases[k],
                 orientation="h",
                 name=LIKERT_LABELS[k],
-                marker=dict(color=LIKERT_COLORS[k], line=dict(width=0.5, color="#ffffff")),
+                marker=dict(color=LIKERT_COLORS[k], line=dict(width=1, color="#111111")),
                 customdata=np.column_stack([
                     cnt_col,
                     pct_col,
@@ -851,13 +849,13 @@ def plot_likert_diverging_bars(likert_df: pd.DataFrame) -> Any:
             )
         )
 
-    fig.add_vline(x=0, line_width=2, line_dash="dash", line_color=OCEAN_BEACH_PALETTE["deep_ocean_blue"])
+    fig.add_vline(x=0, line_width=2, line_dash="dash", line_color="#000000")
 
     chart_height = max(460, len(likert_df) * 24 + 140)
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title="48-Item Diverging Likert Response Distribution (Centered on Neutral = 0%)",
-        subtitle="Negative Left = Disagree (1–2) | Center = Neutral (3) | Positive Right = Agree (4–5) | Ocean Beach Gradient",
+        subtitle="Negative Left = Disagree (1–2) | Center = Neutral (3) | Positive Right = Agree (4–5) | Monochromatic Diverging Gradient",
         height=chart_height,
     )
     fig.update_layout(barmode="overlay")
@@ -879,9 +877,9 @@ def plot_science_internal_consistency(consistency_df: pd.DataFrame) -> Any:
     fig = go.Figure()
 
     bar_colors = [
-        OCEAN_BEACH_PALETTE["sunset_crimson"]
+        "#d8d8d8"
         if r < 0
-        else (OCEAN_BEACH_PALETTE["warm_tangerine"] if r < 0.15 else OCEAN_BEACH_PALETTE["deep_ocean_blue"])
+        else ("#777777" if r < 0.15 else "#111111")
         for r in consistency_df["mean_inter_item_r"]
     ]
 
@@ -891,7 +889,7 @@ def plot_science_internal_consistency(consistency_df: pd.DataFrame) -> Any:
             x=consistency_df["mean_inter_item_r"],
             orientation="h",
             name="Mean Inter-Item Correlation (r)",
-            marker=dict(color=bar_colors, line=dict(width=1, color="#ffffff")),
+            marker=dict(color=bar_colors, line=dict(width=1, color="#111111")),
             text=[f"r = {v:+.2f}" for v in consistency_df["mean_inter_item_r"]],
             textposition="outside",
             customdata=np.column_stack([
@@ -919,22 +917,22 @@ def plot_science_internal_consistency(consistency_df: pd.DataFrame) -> Any:
             mode="markers",
             name="Cronbach's Alpha (α)",
             marker=dict(
-                color=OCEAN_BEACH_PALETTE["golden_sun"],
+                color="#ffffff",
                 size=11,
                 symbol="diamond",
-                line=dict(width=1.5, color=OCEAN_BEACH_PALETTE["deep_ocean_blue"]),
+                line=dict(width=2, color="#000000"),
             ),
             hovertemplate="<b>%{y}</b><br>Cronbach's α: %{x:.3f}<extra></extra>",
         )
     )
 
-    fig.add_vline(x=0.0, line_width=2, line_dash="dash", line_color=OCEAN_BEACH_PALETTE["deep_ocean_blue"])
-    fig.add_vline(x=0.15, line_width=1.5, line_dash="dot", line_color=OCEAN_BEACH_PALETTE["dusk_purple"])
+    fig.add_vline(x=0.0, line_width=2, line_dash="solid", line_color="#000000")
+    fig.add_vline(x=0.15, line_width=1.5, line_dash="dash", line_color="#666666")
 
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title="Science Aspect Internal Consistency & Polarity Diagnostic (13 Multi-Item Cognitive Aspects)",
-        subtitle="Red (< 0) = Reverse-Wording / Polarity Divergence | Orange (0–.15) = Multi-Faceted | Deep Ocean (>.15) = Convergent",
+        subtitle="Light Silver (< 0) = Reverse-Wording / Polarity Divergence | Mid Gray (0–.15) = Multi-Faceted | Solid Black (>.15) = Convergent",
         height=540,
     )
     fig.update_xaxes(title_text="Inter-Item Correlation (r) / Cronbach's Alpha (α)", range=[-0.95, 0.95])
@@ -961,7 +959,7 @@ def plot_faceted_moderation_regressions(
     slopes = mod_res.get("subgroup_slopes", [])
     if not slopes:
         fig = go.Figure()
-        return apply_ocean_beach_layout(fig, f"Faceted Moderation by {moderator}", "Insufficient subgroup data", 420)
+        return apply_monochrome_layout(fig, f"Faceted Moderation by {moderator}", "Insufficient subgroup data", 420)
 
     n_panels = len(slopes)
     subplot_titles = [
@@ -971,29 +969,40 @@ def plot_faceted_moderation_regressions(
         for s in slopes
     ]
 
+    panel_cols = min(3, n_panels)
+    panel_rows = (n_panels + panel_cols - 1) // panel_cols
     fig = make_subplots(
-        rows=1,
-        cols=n_panels,
+        rows=panel_rows,
+        cols=panel_cols,
         shared_xaxes=True,
         shared_yaxes=True,
         subplot_titles=subplot_titles,
-        horizontal_spacing=0.05,
+        horizontal_spacing=0.07,
+        vertical_spacing=0.18 if panel_rows > 1 else 0.08,
     )
 
     color_map = MODERATOR_COLOR_MAPS.get(moderator, {})
     for idx, s in enumerate(slopes):
-        col_idx = idx + 1
+        row_idx = idx // panel_cols + 1
+        col_idx = idx % panel_cols + 1
         lvl = s["level"]
         sub = df[df[moderator].astype(str) == lvl]
-        color = color_map.get(lvl, OCEAN_BEACH_SEQUENCE[idx % len(OCEAN_BEACH_SEQUENCE)])
+        color = color_map.get(lvl, MONOCHROME_SEQUENCE[idx % len(MONOCHROME_SEQUENCE)])
 
+        pt_border = "#000000" if color in ("#777777", "#aaaaaa", "#cccccc", "#999999", "#bbbbbb", "#d8d8d8", "#f0f0f0") else "#ffffff"
         fig.add_trace(
             go.Scatter(
                 x=sub[x_col],
                 y=sub[y_col],
                 mode="markers",
                 name=f"{moderator}: {lvl} (n={len(sub)})",
-                marker=dict(color=color, size=9, opacity=0.82, line=dict(width=1, color="#ffffff")),
+                marker=dict(
+                    color=color,
+                    size=9,
+                    symbol=["circle", "diamond", "square", "triangle-up", "cross"][idx % 5],
+                    opacity=0.85,
+                    line=dict(width=1, color=pt_border),
+                ),
                 customdata=sub["School Type"],
                 hovertemplate=(
                     f"<b>School Type: %{{customdata}}</b> ({moderator}: {lvl})<br>"
@@ -1001,7 +1010,7 @@ def plot_faceted_moderation_regressions(
                     f"{y_label}: %{{y:.2f}}<extra></extra>"
                 ),
             ),
-            row=1,
+            row=row_idx,
             col=col_idx,
         )
 
@@ -1011,12 +1020,12 @@ def plot_faceted_moderation_regressions(
                     x=np.concatenate([s["x_grid"], s["x_grid"][::-1]]),
                     y=np.concatenate([s["ci_high"], s["ci_low"][::-1]]),
                     fill="toself",
-                    fillcolor="rgba(249, 93, 106, 0.16)",
+                    fillcolor="rgba(0, 0, 0, 0.08)",
                     line=dict(color="rgba(255,255,255,0)"),
                     hoverinfo="skip",
                     showlegend=False,
                 ),
-                row=1,
+                row=row_idx,
                 col=col_idx,
             )
             fig.add_trace(
@@ -1025,15 +1034,15 @@ def plot_faceted_moderation_regressions(
                     y=s["y_hat"],
                     mode="lines",
                     name=f"{lvl} OLS (β={s['beta']:.2f}, p={s['p']:.3f})",
-                    line=dict(color=OCEAN_BEACH_PALETTE["sunset_crimson"], width=3),
+                    line=dict(color="#000000", width=3),
                 ),
-                row=1,
+                row=row_idx,
                 col=col_idx,
             )
 
-        fig.update_xaxes(title_text=x_label, row=1, col=col_idx)
+        fig.update_xaxes(title_text=x_label, row=row_idx, col=col_idx)
         if col_idx == 1:
-            fig.update_yaxes(title_text=y_label, row=1, col=col_idx)
+            fig.update_yaxes(title_text=y_label, row=row_idx, col=col_idx)
 
     interaction_summary = "; ".join(
         f"{term['term']}: β={term['beta']:.3f}{term['stars']}, p={term['p']:.3f}"
@@ -1044,11 +1053,11 @@ def plot_faceted_moderation_regressions(
         if mod_res.get("valid") and interaction_summary
         else "Subgroup OLS Comparison"
     )
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"Faceted Moderation Regressions: {x_label} → {y_label} Moderated by {moderator}",
         subtitle=subtitle,
-        height=550,
+        height=430 * panel_rows,
     )
     fig.update_layout(margin=dict(l=65, r=40, t=180, b=60))
     return fig
@@ -1083,7 +1092,8 @@ def plot_subgroup_distributions(
         col_num = c_idx + 1
         for l_idx, lvl in enumerate(levels):
             sub = df[df[moderator].astype(str) == lvl]
-            color = color_map.get(lvl, OCEAN_BEACH_SEQUENCE[l_idx % len(OCEAN_BEACH_SEQUENCE)])
+            color = color_map.get(lvl, MONOCHROME_SEQUENCE[l_idx % len(MONOCHROME_SEQUENCE)])
+            valid_scores = sub[c_code].dropna()
             fig.add_trace(
                 go.Violin(
                     x=[lvl] * len(sub),
@@ -1094,10 +1104,16 @@ def plot_subgroup_distributions(
                     box_visible=False,
                     meanline_visible=False,
                     points=False,
-                    line_color=color,
+                    line_color="#000000",
                     fillcolor=color,
-                    opacity=1,
-                    hoverinfo="skip",
+                    opacity=0.85,
+                    hoveron="violins",
+                    hovertemplate=(
+                        f"<b>{moderator}: {lvl}</b><br>"
+                        f"{titles[c_idx]}<br>"
+                        f"Mean ({len(valid_scores)} respondents): {valid_scores.mean():.2f}"
+                        "<extra></extra>"
+                    ),
                 ),
                 row=1,
                 col=col_num,
@@ -1137,7 +1153,7 @@ def plot_subgroup_distributions(
         if col_num == 1:
             fig.update_yaxes(title_text="Construct Score (Active Metric)", row=1, col=col_num)
 
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"Subgroup Distribution Comparison (Violin + Box + Jitter): SCI, FCT, and CRD by {moderator}",
         subtitle="Displaying Subgroup Kernel Density, Interquartile Box, Mean Line, and Individual Respondent Points",
@@ -1167,6 +1183,8 @@ def plot_multi_aspect_radar(
     fig = go.Figure()
     levels = sorted(df[moderator].astype(str).unique())
     color_map = MODERATOR_COLOR_MAPS.get(moderator, {})
+    dash_styles = ["solid", "dash", "dot", "longdash", "dashdot"]
+    marker_symbols = ["circle", "diamond", "square", "triangle-up", "star"]
 
     for idx, lvl in enumerate(levels):
         sub = df[df[moderator].astype(str) == lvl]
@@ -1174,22 +1192,23 @@ def plot_multi_aspect_radar(
             continue
         r_vals = [float(sub[f"{a}_mean"].mean()) for a in all_20_aspects]
         r_closed = r_vals + [r_vals[0]]
-        color = color_map.get(lvl, OCEAN_BEACH_SEQUENCE[idx % len(OCEAN_BEACH_SEQUENCE)])
+        color = color_map.get(lvl, MONOCHROME_SEQUENCE[idx % len(MONOCHROME_SEQUENCE)])
+        dash = dash_styles[idx % len(dash_styles)]
+        symbol = marker_symbols[idx % len(marker_symbols)]
 
         fig.add_trace(
             go.Scatterpolar(
                 r=r_closed,
                 theta=theta_closed,
-                fill="toself",
+                fill="none",
                 name=f"{moderator}: {lvl} (n={len(sub)})",
-                line=dict(color=color, width=2.8),
-                marker=dict(color=color, size=7),
-                opacity=0.78,
+                line=dict(color=color, width=2.6, dash=dash),
+                marker=dict(color=color, size=7, symbol=symbol, line=dict(width=1, color="#000000")),
                 hovertemplate="<b>%{theta}</b><br>Subgroup Mean (1–5): %{r:.2f}<extra></extra>",
             )
         )
 
-    apply_ocean_beach_layout(
+    apply_monochrome_layout(
         fig,
         title=f"20-Aspect Epistemic & Scientific Radar Profile by {moderator} (14 Science + 6 Evolution Aspects)",
         subtitle="Normalized 1–5 Likert Item Means Across All Theoretical Aspects (TGcodes.csv Labels)",
@@ -1200,15 +1219,15 @@ def plot_multi_aspect_radar(
             bgcolor="#ffffff",
             radialaxis=dict(
                 visible=True,
-                range=[1.5, 4.8],
-                tickvals=[2.0, 2.5, 3.0, 3.5, 4.0, 4.5],
-                gridcolor="#d6e0e8",
-                linecolor=UI_THEME["border_color"],
+                range=[1, 5],
+                tickvals=[1, 2, 3, 4, 5],
+                gridcolor="#e0e0e0",
+                linecolor="#b0b0b0",
                 tickfont=dict(size=10, color=UI_THEME["text_secondary"]),
             ),
             angularaxis=dict(
-                gridcolor="#e9ecef",
-                linecolor=UI_THEME["border_color"],
+                gridcolor="#e0e0e0",
+                linecolor="#b0b0b0",
                 tickfont=dict(size=11, color=UI_THEME["text_primary"]),
             ),
         ),
